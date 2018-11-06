@@ -2,7 +2,6 @@ package ecdsatools
 
 import (
 	"crypto/sha256"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -10,26 +9,26 @@ import (
 func TestSignAndRecoverSignature(t *testing.T) {
 	privateKey, err := GenerateKey()
 	assert.True(t, err == nil)
-	fmt.Println("privateKey: ", BytesToHex(PrivateKeyToBytes(privateKey)))
+	println("privateKey: ", BytesToHex(PrivateKeyToBytes(privateKey)))
 	publicKeyBytes := PublicKeyToBytes(PubKeyFromPrivateKey(privateKey))
 	privateKeyFromHex, err := PrivateKeyFromHex(BytesToHexWithoutPrefix(PrivateKeyToBytes(privateKey)))
 	assert.True(t, BytesToHex(PrivateKeyToBytes(privateKeyFromHex)) == BytesToHex(PrivateKeyToBytes(privateKey)))
-	fmt.Println("publicKey: ", BytesToHex(publicKeyBytes))
-	fmt.Println("publicKey size: ", len(publicKeyBytes))
+	println("publicKey: ", BytesToHex(publicKeyBytes))
+	println("publicKey size: ", len(publicKeyBytes))
 	content := []byte("hello world")
 	contentHash := sha256.Sum256(content)
-	fmt.Println("contentHash: ", BytesToHex(contentHash[:]))
-	fmt.Println("contentHash size: ", len(contentHash))
+	println("contentHash: ", BytesToHex(contentHash[:]))
+	println("contentHash size: ", len(contentHash))
 	sig, err := SignSignatureRecoverable(privateKey, contentHash)
-	fmt.Println("sig: ", BytesToHex(sig[:]))
-	fmt.Println("sig size after all: ", len(sig))
+	println("sig: ", BytesToHex(sig[:]))
+	println("sig size after all: ", len(sig))
 
 	recovered, err := RecoverCompactSignature(sig, contentHash)
-	fmt.Println("recovered: ", BytesToHex(recovered))
-	fmt.Println("recovered size: ", len(recovered))
+	println("recovered: ", BytesToHex(recovered))
+	println("recovered size: ", len(recovered))
 	assert.True(t, BytesToHex(recovered) == BytesToHex(publicKeyBytes))
 
 	verified := VerifySignature(ToPubKey(recovered), contentHash, sig)
-	fmt.Println("verified: ", verified)
+	println("verified: ", verified)
 	assert.True(t, verified)
 }

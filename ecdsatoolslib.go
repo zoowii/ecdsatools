@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"math/big"
+	"encoding/hex"
 )
 
 type CompactSignature [65]byte
@@ -80,6 +81,10 @@ func BigIntToBytes32(value *big.Int) []byte {
 
 func BytesToHex(value []byte) string {
 	return hexutil.Encode(value)
+}
+
+func HexToBytes(hexStr string) ([]byte, error) {
+	return hex.DecodeString(hexStr)
 }
 
 func BytesToHexWithoutPrefix(value []byte) string {
