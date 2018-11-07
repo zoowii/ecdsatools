@@ -1,5 +1,5 @@
 # ecdsatools
-some ecdsa wrapper functions based on go-ethereum libs
+some ecdsa-secp256k1 wrapper functions based on go-ethereum libs
 
 # Usage
 

@@ -12,7 +12,7 @@ import (
 type CompactSignature [65]byte
 type HashDigest [32]byte
 type CompactPubKey [33]byte
-type PubKey [65]byte
+type PubKey [33]byte
 
 func ToCompactPubKey(value []byte) CompactPubKey {
 	var result CompactPubKey
@@ -50,6 +50,20 @@ func PublicKeyToBytes(key *ecdsa.PublicKey) []byte {
 	return crypto.FromECDSAPub(key)
 }
 
+func EthSignatureToFcFormat(sig CompactSignature) CompactSignature {
+	nV := sig[len(sig)-1]
+	remainingBytes := sig[:len(sig)-1]
+	var resultSig CompactSignature
+	resultSig[0] = nV + 31
+	copy(resultSig[1:], remainingBytes)
+	return resultSig
+}
+
+func CompactPubKeyToBytes(pubKey *ecdsa.PublicKey) CompactPubKey {
+	bytes := crypto.CompressPubkey(pubKey)
+	return ToCompactPubKey(bytes)
+}
+
 func PrivateKeyFromHex(hexStr string) (*ecdsa.PrivateKey, error) {
 	return crypto.HexToECDSA(hexStr)
 }
@@ -58,12 +72,17 @@ func PubKeyFromPrivateKey(key *ecdsa.PrivateKey) *ecdsa.PublicKey {
 	return key.Public().(*ecdsa.PublicKey)
 }
 
-func RecoverCompactSignature(signature CompactSignature, sigHash HashDigest) ([]byte, error) {
-	sigPubKey, err := crypto.Ecrecover(sigHash[:], signature[:])
+func PubKeyFromCompactBytes(bytes CompactPubKey) (*ecdsa.PublicKey, error) {
+	return crypto.DecompressPubkey(bytes[:])
+}
+
+func RecoverCompactSignature(signature CompactSignature, sigHash HashDigest) (CompactPubKey, error) {
+	sigPubKey, err := crypto.SigToPub(sigHash[:], signature[:])
 	if err != nil {
-		return nil, err
+		var empty CompactPubKey;
+		return empty, err
 	}
-	return sigPubKey, nil
+	return CompactPubKeyToBytes(sigPubKey), nil
 }
 
 func BigIntToBytes32(value *big.Int) []byte {
@@ -106,7 +125,7 @@ func SignSignature(privateKey *ecdsa.PrivateKey, sigHash HashDigest) (CompactSig
 	return sig, nil
 }
 
-const maxTrySignCount = 100
+const maxTrySignCount = 10
 
 func SignSignatureRecoverable(privateKey *ecdsa.PrivateKey, sigHash HashDigest) (CompactSignature, error) {
 	for tryCount:=0;tryCount < maxTrySignCount;tryCount++ {
@@ -118,8 +137,9 @@ func SignSignatureRecoverable(privateKey *ecdsa.PrivateKey, sigHash HashDigest) 
 		if err != nil {
 			return sig, err
 		}
-		pubKeyHex := BytesToHex(PublicKeyToBytes(PubKeyFromPrivateKey(privateKey)))
-		recoveredPubKeyHex := BytesToHex(recoveredPubKey)
+		pubKeyCompactBytes := CompactPubKeyToBytes(PubKeyFromPrivateKey(privateKey))
+		pubKeyHex := BytesToHex(pubKeyCompactBytes[:])
+		recoveredPubKeyHex := BytesToHex(recoveredPubKey[:])
 		if pubKeyHex == recoveredPubKeyHex {
 			return sig, nil
 		}
