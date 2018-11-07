@@ -54,9 +54,12 @@ func dispatchGenerateKey() {
 	}
 	privateKeyBytes := ecdsatools.PrivateKeyToBytes(privateKey)
 	privateKeyHex := ecdsatools.BytesToHexWithoutPrefix(privateKeyBytes)
-	pubKeyBytes := ecdsatools.PublicKeyToBytes(ecdsatools.PubKeyFromPrivateKey(privateKey))
+	pubKey := ecdsatools.PubKeyFromPrivateKey(privateKey)
+	pubKeyBytes := ecdsatools.PublicKeyToBytes(pubKey)
 	pubKeyBytesHex := ecdsatools.BytesToHexWithoutPrefix(pubKeyBytes)
-	fmt.Printf("private key: %s\ncompact public key: %s\n", privateKeyHex, pubKeyBytesHex)
+	compactPubKeyBytes := ecdsatools.CompactPubKeyToBytes(pubKey)
+	compactPubKeyBytesHex := ecdsatools.BytesToHexWithoutPrefix(compactPubKeyBytes[:])
+	fmt.Printf("private key: %s\npublic key: %s\ncompact public key: %s\n", privateKeyHex, pubKeyBytesHex, compactPubKeyBytesHex)
 }
 
 func dispatchRecover(signatureHex string, digestHex string) {
@@ -84,7 +87,7 @@ func dispatchRecover(signatureHex string, digestHex string) {
 		log.Fatalln(err.Error())
 		return
 	}
-	recoveredPubKeyHex := ecdsatools.BytesToHexWithoutPrefix(recoveredPubKey)
+	recoveredPubKeyHex := ecdsatools.BytesToHexWithoutPrefix(recoveredPubKey[:])
 	println(recoveredPubKeyHex)
 }
 
